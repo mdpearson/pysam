@@ -142,7 +142,7 @@ class BinaryTest(unittest.TestCase):
             (
                 ("ex1.cat.bam", "cat -o ex1.cat.bam ex1.bam ex1.bam"),
                 ("pysam_ex1.cat.bam",
-                 (pysam.cat, " -o pysam_ex1.cat.bam ex1.bam ex1.bam")),
+                 (pysam.cat, "-o pysam_ex1.cat.bam ex1.bam ex1.bam")),
             ),
             "targetcut":
             (
