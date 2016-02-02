@@ -240,46 +240,49 @@ class BinaryTest(unittest.TestCase):
             # cd to workdir
             savedir = os.getcwd()
             os.chdir(WORKDIR)
-            for label in self.order:
-                sys.stdout.write("preparing test {}".format(label))
-                command = self.commands[label]
-                # build samtools command and target and run
-                samtools_target, samtools_command = command[0]
-                runSamtools(" ".join((SAMTOOLS, samtools_command)))
-                sys.stdout.write(" samtools ok")
-                # get pysam command and run
-                try:
-                    pysam_target, pysam_command = command[1]
-                except ValueError as msg:
-                    raise ValueError("error while setting up %s=%s: %s" %
-                                     (label, command, msg))
 
-                pysam_method, pysam_options = pysam_command
-                
-                try:
-                    output = pysam_method(*pysam_options.split(" "),
-                                          raw=True,
-                                          catch_stdout=True)
-                except pysam.SamtoolsError as msg:
-                    raise pysam.SamtoolsError(
-                        "error while executing %s: options=%s: msg=%s" %
-                        (label, pysam_options, msg))
+            try:
+                for label in self.order:
+                    sys.stdout.write("preparing test {}".format(label))
+                    command = self.commands[label]
+                    # build samtools command and target and run
+                    samtools_target, samtools_command = command[0]
+                    runSamtools(" ".join((SAMTOOLS, samtools_command)))
+                    sys.stdout.write(" samtools ok")
+                    # get pysam command and run
+                    try:
+                        pysam_target, pysam_command = command[1]
+                    except ValueError as msg:
+                        raise ValueError("error while setting up %s=%s: %s" %
+                                         (label, command, msg))
 
-                sys.stdout.write(" pysam ok\n")
+                    pysam_method, pysam_options = pysam_command
 
-                if ">" in samtools_command:
-                    with open(pysam_target, "wb") as outfile:
-                        if type(output) == list:
-                            if IS_PYTHON3:
-                                for line in output:
-                                    outfile.write(line.encode('ascii'))
+                    try:
+                        output = pysam_method(*pysam_options.split(" "),
+                                              raw=True,
+                                              catch_stdout=True)
+                    except pysam.SamtoolsError as msg:
+                        raise pysam.SamtoolsError(
+                            "error while executing %s: options=%s: msg=%s" %
+                            (label, pysam_options, msg))
+
+                    sys.stdout.write(" pysam ok\n")
+
+                    if ">" in samtools_command:
+                        with open(pysam_target, "wb") as outfile:
+                            if type(output) == list:
+                                if IS_PYTHON3:
+                                    for line in output:
+                                        outfile.write(line.encode('ascii'))
+                                else:
+                                    for line in output:
+                                        outfile.write(line)
                             else:
-                                for line in output:
-                                    outfile.write(line)
-                        else:
-                            outfile.write(output)
+                                outfile.write(output)
+            finally:
+                os.chdir(savedir)
 
-            os.chdir(savedir)
             BinaryTest.first_time = False
 
         samtools_version = getSamtoolsVersion()
